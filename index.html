@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090d1b">
+  <meta name="description" content="為搬貨工作設計的呼吸節奏引導：開工前專注、休息室恢復，另保留非上班時間的原版呼吸循環。">
+  <title>Breath Flow v1.2.0 · 工作呼吸節律</title>
+  <style>
+    :root{color-scheme:dark;--bg:#090d1b;--panel:#111a2a;--border:#2a374c;--text:#eff6ff;--muted:#a3b1c9;--aqua:#66ead7;--blue:#79a9ff;--gold:#f7d38f;--warning:#ffb59d;--orbScale:.82;--orbHue:170;--orbOpacity:.54;--dot:#73ead5}
+    *,*::before,*::after{box-sizing:border-box}
+    html{min-height:100%;scroll-behavior:smooth}
+    body{margin:0;min-height:100vh;background:radial-gradient(ellipse 56% 60% at 47% 21%,#1b2c41 0,transparent 72%),radial-gradient(ellipse 55% 45% at 99% 80%,#28233f 0,transparent 75%),var(--bg);font:400 15px/1.6 system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif;color:var(--text);letter-spacing:.01em}
+    button,select,input{font:inherit}
+    button{cursor:pointer}
+    button:disabled,select:disabled,input:disabled{cursor:not-allowed;opacity:.48}
+    button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #8fdefc;outline-offset:4px}
+    .shell{max-width:1240px;padding:28px 28px 42px;margin:auto}
+    .topbar{display:flex;gap:18px;align-items:center;justify-content:space-between;margin-bottom:26px}
+    .brand{display:flex;align-items:center;gap:13px;font-size:14px;font-weight:800;letter-spacing:.16em}
+    .brand-mark{width:40px;height:40px;border:1px solid #507e8f;border-radius:14px;background:linear-gradient(145deg,#153b49,#111829);display:grid;place-items:center;box-shadow:0 0 20px #29b4a522}
+    .brand-mark svg{width:26px;height:26px}
+    .topmeta{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
+    .live-dot{height:7px;width:7px;border-radius:50%;background:var(--aqua);box-shadow:0 0 10px var(--aqua)}
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 318px;align-items:stretch;gap:20px}
+    .stage-card,.settings-card{background:linear-gradient(160deg,#152033d9,#101725e9);border:1px solid var(--border);border-radius:26px;box-shadow:0 24px 65px #0005}
+    .stage-card{position:relative;min-width:0;overflow:hidden;padding:33px 34px 25px}
+    .stage-card:before{content:"";position:absolute;left:50%;top:170px;width:430px;height:430px;transform:translateX(-50%);background:radial-gradient(circle,#3b98942b,transparent 70%);pointer-events:none}
+    .section-label{font-size:11px;font-weight:800;letter-spacing:.23em;text-transform:uppercase;color:var(--aqua)}
+    h1{font-size:clamp(25px,3.5vw,40px);line-height:1.22;font-weight:750;letter-spacing:-.04em;margin:8px 0 7px}
+    .subtitle{color:var(--muted);margin:0;font-size:13px}
+    .top-row{display:flex;align-items:start;justify-content:space-between;gap:12px}
+    .status-pill{border:1px solid #41616a;background:#15343a;color:#b8eee4;border-radius:99px;padding:6px 12px;white-space:nowrap;font-size:11px;font-weight:750;margin-top:6px}
+    .orb-area{position:relative;min-height:425px;display:flex;align-items:center;justify-content:center;isolation:isolate}
+    .orb-halo{position:absolute;width:clamp(248px,35vw,374px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#62d6cb25 0,transparent 71%);transform:scale(1.36);filter:blur(25px);pointer-events:none}
+    .orb-core{position:absolute;width:clamp(238px,32vw,330px);aspect-ratio:1;border-radius:50%;transform:scale(var(--orbScale));will-change:transform;background:radial-gradient(circle at 37% 29%,#dafcf5cf 0,#8dece0b7 19%,#43c4c0c9 48%,#396da9b5 76%,#1a305aee 100%);border:1px solid #b6fff8a8;box-shadow:inset 0 0 40px #e6ffff66,inset -23px -30px 47px #17445a99,0 0 55px #43cbc060,0 0 110px #59aeaf19;transition:box-shadow 400ms ease}
+    .orb-core::after{content:"";position:absolute;inset:5%;border-radius:50%;border:1px solid #e8ffff40;transform:rotate(-18deg)}
+    .orb-ring{position:absolute;width:clamp(275px,38vw,393px);aspect-ratio:1;overflow:visible;transform:rotate(-90deg)}
+    .orb-ring circle{fill:none;stroke-width:2;vector-effect:non-scaling-stroke}
+    .orb-ring .ring-bg{stroke:#8fc7d42b}
+    .orb-ring .ring-progress{stroke:var(--aqua);stroke-width:4;stroke-linecap:round;stroke-dasharray:100 100;transition:stroke .3s}
+    .orb-text{position:relative;text-align:center;z-index:1;text-shadow:0 2px 22px #0c324e88;pointer-events:none;min-width:200px}
+    .instruction{font-size:clamp(28px,3.4vw,43px);font-weight:780;letter-spacing:.065em;line-height:1.3}
+    .phase-detail{font-size:14px;margin-top:7px;color:#e8fffbee}
+    .clock{font-variant-numeric:tabular-nums;font-size:clamp(38px,4.8vw,58px);font-weight:660;letter-spacing:-.055em;line-height:1.3;margin-top:8px}
+    .clock-label{font-size:11px;letter-spacing:.13em;color:#d0ece8}
+    .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 22px}
+    .metric{background:#0b1524a6;border:1px solid #283e52;border-radius:14px;padding:12px 11px;text-align:center}
+    .metric span{display:block;font-size:11px;color:var(--muted)}
+    .metric b{display:block;font-size:17px;line-height:1.4;margin-top:3px;font-variant-numeric:tabular-nums}
+    .controls{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;min-height:49px}
+    .btn{border:1px solid #405468;background:#18263a;color:var(--text);border-radius:12px;padding:12px 19px;font-weight:700;min-height:45px;transition:background .2s,transform .2s}
+    .btn:hover:not(:disabled){transform:translateY(-1px);background:#26364c}
+    .btn-primary{background:linear-gradient(115deg,#68e6d1,#76bde3);color:#0e2435;border:0;min-width:172px}
+    .btn-primary:hover:not(:disabled){background:linear-gradient(115deg,#a0ffed,#9bd3f5)}
+    .btn-danger{background:#402733;border-color:#734653;color:#ffd3cb}
+    .btn-link{border:0;background:transparent;color:#b5c5d9}
+    .progress-block{margin:24px 0 0}
+    .progress-top{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:11px;margin-bottom:8px}
+    .track{height:5px;background:#31445b;border-radius:99px;overflow:hidden}
+    .track-fill{height:100%;width:0;background:linear-gradient(90deg,var(--aqua),var(--blue));border-radius:99px;transition:width .1s linear}
+    .mini-steps{display:flex;align-items:center;gap:8px;margin-top:17px;color:var(--muted);font-size:11px;flex-wrap:wrap}
+    .mini-step{display:flex;align-items:center;gap:6px}
+    .step-point{height:7px;width:7px;border-radius:50%;background:#46566d}
+    .mini-step.active .step-point{background:var(--aqua);box-shadow:0 0 10px #66ead780}
+    .mini-step.active{color:#e3fff7}
+    .step-line{width:14px;height:1px;background:#44536a}
+    .settings-card{padding:26px 22px;align-self:stretch}
+    .settings-heading{font-size:17px;font-weight:780;letter-spacing:-.03em;margin:0 0 4px}
+    .settings-hint{font-size:12px;color:var(--muted);margin:0 0 21px}
+    .mode-group{display:grid;gap:8px;margin-bottom:22px}
+    .quick-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:17px}
+    .quick-mode{min-width:0;text-align:left;background:#0f2031;border:1px solid #3e5e6a;border-radius:13px;padding:12px 13px;color:var(--text);transition:border-color .2s,background .2s}
+    .quick-mode:hover:not(:disabled){border-color:#8ae4d5;background:#183548}
+    .quick-mode.active{background:#153a3d;border-color:#79e1d2}
+    .quick-mode strong{display:block;font-size:13px}
+    .quick-mode small{display:block;color:#a8c0cd;font-size:11px;line-height:1.5;margin-top:2px}
+    .session-clock{font-size:12px;color:#a8d8dd;letter-spacing:.05em;margin-top:4px}
+    .work-tip{padding:10px 13px;background:#101e2e;border-left:3px solid #63d6c8;color:#c1d7e3;border-radius:7px;font-size:12px;line-height:1.65;margin-top:12px}
+    .shift-box{background:#0e1b2a;border:1px solid #30445a;border-radius:13px;padding:13px;margin-top:18px}
+    .shift-box b{font-size:12px}
+    .shift-box p{font-size:11px;line-height:1.65;color:#a9bacd;margin:7px 0 0}
+    .mode{display:flex;align-items:flex-start;gap:11px;padding:13px 12px;cursor:pointer;border-radius:12px;border:1px solid #384a60;background:#121d2d;transition:border-color .2s,background .2s}
+    .mode:has(input:checked){border-color:#6edccf;background:#163037}
+    .advanced-mode{border:1px dashed #3c5064;border-radius:11px;padding:10px;color:#aebfd0;font-size:12px}
+    .advanced-mode summary{cursor:pointer;list-style-position:inside}
+    .advanced-mode em{color:#f7c49a;font-style:normal}
+    .mode input{accent-color:#64d6ca;margin-top:4px}
+    .mode strong{display:block;font-size:13px;font-weight:750}
+    .mode small{display:block;color:#a4b2c9;font-size:11px;line-height:1.6;margin-top:2px}
+    .setting-section{border-top:1px solid #2e3d51;padding-top:17px;margin-top:15px}
+    .setting-title{margin-bottom:12px;color:#ccdeef;font-size:12px;font-weight:770}
+    .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px 10px}
+    .field-label{font-size:11px;color:var(--muted);display:block;margin-bottom:6px}
+    .field-select{width:100%;appearance:auto;border:1px solid #3b4a60;border-radius:10px;background:#0e1b2b;color:var(--text);padding:10px 8px;font-size:13px}
+    .toggle-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;color:#c7d7e8;font-size:12px}
+    .switch{position:relative;display:inline-flex;align-items:center;cursor:pointer}
+    .switch input{position:absolute;opacity:0;width:1px;height:1px}
+    .switch span{width:39px;height:22px;background:#394b60;border-radius:99px;position:relative;display:block;transition:background .2s}
+    .switch span:after{content:"";position:absolute;width:16px;height:16px;top:3px;left:3px;background:white;border-radius:50%;transition:transform .2s}
+    .switch input:checked+span{background:#279b8f}
+    .switch input:checked+span:after{transform:translateX(17px)}
+    .switch input:focus-visible+span{outline:3px solid #8fdefc;outline-offset:3px}
+    .safety-box{display:flex;gap:9px;align-items:flex-start;padding:13px;border:1px solid #65503e;background:#2c2625;border-radius:12px;margin-top:18px;color:#e9d6be;font-size:11px;line-height:1.75}
+    .safety-box svg{flex-shrink:0;margin-top:2px}
+    .footer{padding:22px 1px 0;display:flex;align-items:center;justify-content:space-between;gap:15px;font-size:11px;color:#98aac2;flex-wrap:wrap}
+    .footer a{color:#b2d6e4}
+    .toast{position:fixed;left:50%;bottom:25px;transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:11px 18px;background:#263c4d;color:#f4fbff;border:1px solid #587189;border-radius:99px;font-size:12px;box-shadow:0 14px 36px #0009;transition:opacity .2s,transform .2s;z-index:15;white-space:normal;text-align:center;max-width:calc(100% - 28px)}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .modal-backdrop{position:fixed;inset:0;z-index:30;background:#050914d9;backdrop-filter:blur(9px);display:grid;place-items:center;padding:16px;overflow-y:auto}
+    .modal-backdrop[hidden]{display:none}
+    .modal{max-width:495px;max-height:calc(100dvh - 32px);overflow-y:auto;width:100%;border:1px solid #4e6470;border-radius:22px;background:linear-gradient(160deg,#1c2d3e,#121c2e);box-shadow:0 30px 110px #000b;padding:26px}
+    .modal h2{font-size:24px;line-height:1.35;margin:10px 0 13px}
+    .modal p,.modal li{font-size:13px;color:#c9d4df;line-height:1.85}
+    .modal ul{padding-left:21px;margin:10px 0 18px}
+    .consent{display:flex;align-items:flex-start;gap:10px;padding:13px;border:1px solid #3b5367;background:#122132;border-radius:11px;margin:17px 0;font-size:12px;line-height:1.7}
+    .consent input{accent-color:#68ead8;margin-top:4px;flex-shrink:0}
+    .modal-actions{display:flex;justify-content:end;gap:10px;flex-wrap:wrap}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+    body[data-phase="exhale"]{--aqua:#9cb4ff}
+    body[data-phase="hold"]{--aqua:#f7d38f}
+    body[data-phase="recovery"]{--aqua:#7ef3cc}
+    body[data-phase="rest"]{--aqua:#d0b0ff}
+    body[data-phase="done"]{--aqua:#7ef3cc}
+    @media(max-width:920px){.layout{grid-template-columns:1fr}.settings-card{padding:23px}.mode-group{grid-template-columns:1fr 1fr}.orb-area{min-height:420px}}
+    @media(max-width:540px){.quick-modes{gap:7px}.quick-mode{padding:10px 9px}.quick-mode strong{font-size:12px}.quick-mode small{font-size:10px}.shell{padding:16px 13px 28px}.topbar{margin-bottom:16px}.brand{font-size:12px;letter-spacing:.13em}.brand-mark{height:35px;width:35px;border-radius:11px}.topmeta{font-size:10px}.stage-card,.settings-card{border-radius:19px}.stage-card{padding:24px 17px 21px}.status-pill{font-size:10px;padding:5px 9px}.orb-area{min-height:365px}.orb-core{width:260px}.orb-ring{width:310px}.orb-halo{width:290px}.instruction{font-size:32px}.clock{font-size:43px}.metric{padding:10px 5px}.metric b{font-size:15px}.controls{gap:8px}.btn{padding:10px 12px;min-height:44px;font-size:13px}.btn-primary{min-width:147px}.mode-group{grid-template-columns:1fr}.settings-card{padding:22px 17px}}
+    /* v1.2.0: one-screen breathing player on portrait devices; settings use a dedicated drawer. */
+    .mobile-settings-trigger,.settings-drawer-head,.settings-scrim,.version-compact{display:none}
+    @media (max-width:700px) and (orientation:portrait){
+      html,body{min-height:100%;overscroll-behavior:none}
+      body{background:#090d1b}
+      .shell{box-sizing:border-box;display:flex;flex-direction:column;min-height:0;height:100vh;height:100dvh;max-width:none;padding:max(7px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(7px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));overflow:hidden}
+      .topbar{flex:none;height:38px;min-height:38px;margin-bottom:6px;gap:8px;padding:0 3px}
+      .brand{font-size:11px;gap:8px;letter-spacing:.105em;white-space:nowrap}
+      .brand-mark{width:31px;height:31px;border-radius:9px}
+      .brand-mark svg{width:21px;height:21px}
+      .topmeta{margin-left:auto;gap:5px;font-size:10px;white-space:nowrap}
+      .topmeta .version-long{display:none}
+      .topmeta .version-compact{display:inline}
+      .mobile-settings-trigger{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:none;min-height:32px;padding:4px 9px;color:#e4fffd;font-size:12px;font-weight:700;border:1px solid #507483;border-radius:10px;background:#183040}
+      .mobile-settings-trigger svg{width:15px;height:15px}
+      .layout{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;gap:0}
+      .stage-card{display:flex;flex-direction:column;min-height:0;height:100%;flex:1 1 auto;border-radius:18px;padding:12px 12px 10px;box-shadow:none;overflow:hidden}
+      .stage-card:before{display:none}
+      .top-row{flex:none;align-items:center;gap:7px}
+      .top-row>div:first-child{min-width:0;flex:1}
+      .section-label{font-size:8px;letter-spacing:.14em}
+      h1{font-size:clamp(16px,4.6vw,21px);letter-spacing:-.045em;line-height:1.17;margin:2px 0 1px;white-space:nowrap}
+      .subtitle{font-size:10px;line-height:1.3;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .status-pill{flex:none;font-size:9px;margin-top:0;padding:4px 7px;max-width:39%;overflow:hidden;text-overflow:ellipsis}
+      .quick-modes{flex:none;margin-top:10px;gap:7px}
+      .quick-mode{padding:6px 8px;border-radius:10px;min-height:44px;display:flex;flex-direction:column;justify-content:center}
+      .quick-mode strong{font-size:clamp(11px,3.2vw,13px);line-height:1.3}
+      .quick-mode small{font-size:clamp(9px,2.6vw,10px);line-height:1.2;margin-top:2px}
+      .work-tip{display:none}
+      .orb-area{flex:1 1 auto;min-height:0;min-width:0;margin:2px 0;position:relative}
+      .orb-core{width:var(--mobile-orb)}
+      .orb-ring{width:calc(var(--mobile-orb) * 1.16)}
+      .orb-halo{width:calc(var(--mobile-orb) * 1.12);filter:blur(12px)}
+      .orb-text{min-width:0;max-width:84%;width:auto}
+      .instruction{font-size:clamp(20px,6vw,28px);line-height:1.12;letter-spacing:.02em}
+      .phase-detail{font-size:clamp(10px,2.8vw,12px);line-height:1.35;margin-top:3px}
+      .clock{font-size:clamp(28px,9vw,42px);margin-top:1px;line-height:1.1}
+      .clock-label{font-size:9px;letter-spacing:.03em}
+      .session-clock{font-size:10px;margin-top:2px}
+      .metrics{flex:none;gap:6px;margin:0 0 8px}
+      .metric{padding:5px 3px;border-radius:10px}
+      .metric span{font-size:9px;line-height:1.35}
+      .metric b{font-size:clamp(12px,3.6vw,15px);margin-top:1px;line-height:1.45}
+      .controls{flex:none;flex-wrap:nowrap;gap:7px;min-height:39px}
+      .btn{min-height:39px;padding:7px 10px;font-size:12px;border-radius:10px}
+      .btn-primary{min-width:0;flex:1 1 auto}
+      .controls .btn:not([hidden]){flex:1 1 auto}
+      .progress-block{flex:none;margin:9px 0 0}
+      .progress-top{font-size:10px;margin-bottom:4px}
+      .track{height:4px}
+      .mini-steps{flex:none;margin-top:7px;font-size:10px;gap:6px;min-height:13px}
+      .step-point{height:6px;width:6px}
+      .step-line{width:12px}
+      .footer{display:none}
+      .settings-scrim{display:block;position:fixed;inset:0;background:#030813bc;z-index:19;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s,visibility .2s}
+      .settings-card{position:fixed;z-index:20;top:0;right:0;bottom:0;bottom:0;bottom:env(safe-area-inset-bottom);width:min(100%,440px);max-width:100%;overflow-y:auto;overscroll-behavior:contain;padding:18px 18px 28px;border-radius:22px 0 0 22px;transform:translateX(105%);visibility:hidden;pointer-events:none;transition:transform .23s ease,visibility .23s ease}
+      .settings-drawer-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+      .settings-drawer-head b{font-size:16px}
+      .settings-close{padding:5px 12px;min-height:34px;background:#294259;color:#fff;border:1px solid #486b82;border-radius:9px;font-size:12px}
+      body.settings-open .settings-card{transform:translateX(0);visibility:visible;pointer-events:auto}
+      body.settings-open .settings-scrim{opacity:1;visibility:visible;pointer-events:auto}
+      body.settings-open{overflow:hidden}
+      :root{--mobile-orb:clamp(148px,min(68vw,calc(100dvh - 340px)),292px)}
+    }
+    @media (max-width:700px) and (orientation:portrait) and (max-height:680px){
+      .topbar{height:34px;min-height:34px;margin-bottom:4px}
+      .stage-card{padding:9px 10px 8px}
+      .quick-modes{margin-top:7px}
+      .quick-mode{min-height:40px;padding:5px 7px}
+      .metrics{margin-bottom:5px}
+      .metric{padding:3px 2px}
+      .controls{min-height:35px}
+      .btn{min-height:35px;padding:6px 8px}
+      .progress-block{margin-top:6px}
+      .mini-steps{margin-top:5px}
+      :root{--mobile-orb:clamp(142px,min(65vw,calc(100dvh - 330px)),260px)}
+    }
+    @media (max-width:700px) and (orientation:portrait) and (max-height:575px){
+      .topbar{height:31px;min-height:31px}
+      .brand-mark{height:27px;width:27px}
+      .stage-card{padding:7px 9px}
+      .section-label{display:none}
+      .subtitle{font-size:9px}
+      .quick-modes{margin-top:5px}
+      .quick-mode{min-height:36px}
+      .orb-area{margin:0}
+      .phase-detail{font-size:10px}
+      .metrics{margin-bottom:3px}
+      .controls,.btn{min-height:33px}
+      .progress-block{margin-top:4px}
+      .mini-steps{margin-top:4px}
+      :root{--mobile-orb:clamp(124px,min(62vw,calc(100dvh - 315px)),236px)}
+    }
+    @media (max-width:700px) and (orientation:portrait) and (max-height:495px){
+      .shell{overflow-y:auto;min-height:100dvh;height:auto}
+      .layout,.stage-card{min-height:450px;height:auto}
+      .orb-area{min-height:155px}
+    }
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body data-phase="idle">
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M3 17c5-15 9-15 13 0s8 15 13 0" stroke="#76ead8" stroke-width="2.4" stroke-linecap="round"/><path d="M3 23c5-15 9-15 13 0s8 15 13 0" stroke="#819dfa" stroke-width="2.2" stroke-linecap="round" opacity=".75"/></svg></div>BREATH FLOW</div>
+    <div class="topmeta"><span class="live-dot" aria-hidden="true"></span><span class="version-long">工作節律版 v1.2.0 · 離線使用</span><span class="version-compact">v1.2.0</span></div>
+    <button class="mobile-settings-trigger" id="settingsTrigger" type="button" aria-label="開啟設定" aria-controls="settingsCard" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.5 12a7.5 7.5 0 0 0-.1-1.1l1.5-1.2-1.5-2.6-1.9.6a8.1 8.1 0 0 0-1.8-1.1L15.3 4h-3l-.5 2.6a8 8 0 0 0-1.8 1.1L8 7.1 6.5 9.7 8 10.9a7.5 7.5 0 0 0 0 2.2l-1.5 1.2L8 16.9l2-.6a8 8 0 0 0 1.8 1.1l.5 2.6h3l.4-2.6a8 8 0 0 0 1.8-1.1l1.9.6 1.5-2.6-1.5-1.2c.1-.4.1-.7.1-1.1Z" transform="translate(-1.5,0)"/></svg>設定</button>
+  </header>
+  <div class="layout">
+    <main class="stage-card" aria-label="呼吸引導播放器">
+      <div class="top-row">
+        <div><div class="section-label">WORKDAY BREATHING</div><h1>工作時專注，休息時恢復。</h1><p class="subtitle" id="pageSubtitle">進休息室後先喘勻，再進行三分鐘輕柔呼吸。</p></div>
+        <div class="status-pill" id="statusPill">尚未開始</div>
+      </div>
+      <div class="quick-modes" role="group" aria-label="工作呼吸快捷模式">
+        <button class="quick-mode" id="quickReady" type="button" aria-pressed="false"><strong>開工前 · 專注</strong><small>1 分鐘｜3 秒吸、3 秒吐</small></button>
+        <button class="quick-mode active" id="quickRest" type="button" aria-pressed="true"><strong>進休息室 · 恢復</strong><small>3 分鐘｜4 秒吸、6 秒吐</small></button>
+      </div>
+      <div class="work-tip" id="workTip">先坐下，等呼吸恢復平穩再開始；不必深吸、不要憋氣。</div>
+      <div class="orb-area">
+        <div class="orb-halo" aria-hidden="true"></div>
+        <div class="orb-core" id="orbCore" aria-hidden="true"></div>
+        <svg class="orb-ring" viewBox="0 0 400 400" aria-hidden="true"><circle class="ring-bg" cx="200" cy="200" r="190" pathLength="100"/><circle class="ring-progress" id="ringProgress" cx="200" cy="200" r="190" pathLength="100"/></svg>
+        <div class="orb-text" aria-live="off"><div class="instruction" id="phaseTitle">準備開始</div><div class="phase-detail" id="phaseHint">設定你的節奏，再按下開始</div><div class="clock" id="timer">—</div><div class="clock-label" id="timerLabel">呼吸引導</div><div class="session-clock" id="sessionRemaining">整段剩餘 03:00</div></div>
+      </div>
+      <div class="metrics" aria-label="練習進度">
+        <div class="metric"><span id="metric1Label">本次時間</span><b id="metric1Value">3 分鐘</b></div>
+        <div class="metric"><span id="metric2Label">呼吸循環</span><b id="metric2Value">0 / 18</b></div>
+        <div class="metric"><span>目前階段</span><b id="metric3Value">待機中</b></div>
+      </div>
+      <div class="controls">
+        <button class="btn btn-primary" id="startBtn" type="button">開始休息室呼吸</button>
+        <button class="btn" id="pauseBtn" type="button" hidden>暫停</button>
+        <button class="btn btn-primary" id="nextBtn" type="button" hidden>我想吸氣了</button>
+        <button class="btn" id="continueBtn" type="button" hidden>開始下一輪</button>
+        <button class="btn btn-danger" id="stopBtn" type="button" hidden>立即結束</button>
+        <button class="btn btn-link" id="resetBtn" type="button" hidden>重設</button>
+      </div>
+      <div class="progress-block"><div class="progress-top"><span id="progressText">呼吸次數進度</span><span id="progressNumber">0%</span></div><div class="track"><div class="track-fill" id="progressFill"></div></div></div>
+      <div class="mini-steps" aria-label="階段流程">
+        <div class="mini-step" id="stepInhale"><span class="step-point"></span>吸氣</div><span class="step-line"></span>
+        <div class="mini-step" id="stepExhale"><span class="step-point"></span>吐氣</div><span class="step-line"></span>
+        <div class="mini-step" id="stepHold"><span class="step-point"></span>自主閉氣</div><span class="step-line"></span>
+        <div class="mini-step" id="stepRecovery"><span class="step-point"></span>恢復吸氣</div>
+      </div>
+    </main>
+    <div class="settings-scrim" id="settingsScrim" aria-hidden="true"></div>
+    <aside class="settings-card" id="settingsCard" aria-label="設定選項">
+      <div class="settings-drawer-head"><b>呼吸設定</b><button class="settings-close" id="settingsClose" type="button" aria-label="關閉設定">關閉 ✕</button></div>
+      <h2 class="settings-heading">呼吸模式</h2><p class="settings-hint">依照搬貨作息，一鍵選擇需要的節奏。</p>
+      <div class="mode-group" id="modeGroup">
+        <label class="mode"><input type="radio" name="mode" value="rest" checked><span><strong>休息室恢復｜優先使用</strong><small>預設 3 分鐘；吸 4 秒、吐 6 秒，不閉氣</small></span></label>
+        <label class="mode"><input type="radio" name="mode" value="ready"><span><strong>開工前專注</strong><small>預設 1 分鐘；吸 3 秒、吐 3 秒，不閉氣</small></span></label>
+        <details class="advanced-mode"><summary>非工作時間｜原版 Wim Hof 節律（進階）</summary><label class="mode" style="margin-top:8px"><input type="radio" name="mode" value="cycle"><span><strong>深呼吸與自主閉氣</strong><small>30–40 次呼吸 → 自主閉氣 → 15 秒恢復。<em>不可在工作前或工作間使用。</em></small></span></label></details>
+      </div>
+      <div class="setting-section" id="restFields"><div class="setting-title">休息室呼吸時間</div><label><span class="field-label">讓自己有時間真正休息</span><select class="field-select" id="restSelect"><option value="2">2 分鐘</option><option value="3" selected>3 分鐘（建議）</option><option value="5">5 分鐘</option></select></label><p class="settings-hint" style="margin:9px 0 0">先喘勻，再緩慢吸 4 秒、吐 6 秒；節奏不舒服就自然呼吸。</p></div>
+      <div class="setting-section" id="readyFields" hidden><div class="setting-title">開工前呼吸時間</div><label><span class="field-label">短時間調整專注</span><select class="field-select" id="readySelect"><option value="1" selected>1 分鐘（建議）</option><option value="2">2 分鐘</option><option value="3">3 分鐘</option></select></label><p class="settings-hint" style="margin:9px 0 0">自然吸 3 秒、吐 3 秒；不追求興奮或改變呼吸濃度。</p></div>
+      <div class="setting-section" id="cycleFields" hidden><div class="setting-title">原版循環設定（非工作時間）</div><div class="field-grid">
+        <label><span class="field-label">每輪呼吸次數</span><select class="field-select" id="breathsSelect"><option value="30" selected>30 次</option><option value="35">35 次</option><option value="40">40 次</option></select></label>
+        <label><span class="field-label">總輪數</span><select class="field-select" id="roundsSelect"><option value="1">1 輪</option><option value="2">2 輪</option><option value="3" selected>3 輪</option><option value="4">4 輪</option></select></label>
+        <label><span class="field-label">每次吸氣</span><select class="field-select" id="inhaleSelect"><option value="2">2 秒</option><option value="3" selected>3 秒</option><option value="4">4 秒</option><option value="5">5 秒</option></select></label>
+        <label><span class="field-label">每次吐氣</span><select class="field-select" id="exhaleSelect"><option value="2">2 秒</option><option value="3" selected>3 秒</option><option value="4">4 秒</option><option value="5">5 秒</option></select></label>
+      </div></div>
+
+      <div class="setting-section"><div class="setting-title">提示與聲音</div>
+        <div class="toggle-line"><span>中文語音引導</span><label class="switch"><input type="checkbox" id="voiceCheck" checked aria-label="中文語音引導"><span></span></label></div>
+        <div class="toggle-line"><span>輕柔轉換提示音</span><label class="switch"><input type="checkbox" id="soundCheck" checked aria-label="輕柔轉換提示音"><span></span></label></div>
+      </div>
+      <div class="shift-box"><b>你的班表｜建議時段</b><p>開工時段：09:00、10:15、11:15、12:15、14:00、14:50、16:00；可提前 1 分鐘練習。<br>坐下喘勻後再練。<br>12:30 午餐午休：正常吃飯休息。<br>不必每一輪都做呼吸練習。</p></div>
+      <div class="safety-box"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#efc18b" stroke-width="1.8" aria-hidden="true"><path d="M12 2 2 21h20L12 2Z"/><path d="M12 9v5m0 3h.01"/></svg><div><strong>工作安全：</strong>工作模式禁止閉氣及刻意過度換氣，先坐穩、喘勻；若頭暈、胸痛、異常呼吸困難請停止，必要時就醫。原版連續深呼吸／閉氣可能昏厥，僅能離開工作時段，在安全地方坐或躺進行，不能在水邊、駕駛時、或即將搬貨／操作機具前進行。</div></div>
+    </aside>
+  </div>
+  <footer class="footer"><span>本工具不測量內啡肽、血氧或神經狀態；呼吸練習不能代替休息或醫療建議。</span><span>參考：<a href="https://link.springer.com/article/10.1007/s12671-023-02294-2" target="_blank" rel="noopener noreferrer">慢呼吸系統性回顧</a> · <a href="https://www.wimhofmethod.com/" target="_blank" rel="noopener noreferrer">原版呼吸安全資訊</a></span></footer>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div class="modal-backdrop" id="safetyModal" hidden>
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="section-label">BEFORE YOU BEGIN</div><h2 id="modalTitle">練習前，先確認安全環境</h2>
+    <p id="modalDescription">此模式含連續深呼吸與閉氣，可能導致頭暈、手腳刺麻或短暫昏厥。閉氣時間不以秒數作為目標。</p>
+    <ul id="modalList"><li>請坐在安全的位置或躺下，不要站立。</li><li>不要在泳池、浴缸、淋浴間、開車或機具旁使用。</li><li>如有心肺疾病、癲癇、懷孕或其他相關健康疑慮，先諮詢醫療專業人員。</li><li>若出現快昏倒、胸痛、心悸或其他不適，立即停止並恢復自然呼吸，必要時就醫。</li></ul>
+    <label class="consent"><input type="checkbox" id="safetyConsent"><span>我已位於安全、乾燥的地方，正坐著或躺著，並了解可以隨時停止。</span></label>
+    <div class="modal-actions"><button class="btn" type="button" id="cancelStartBtn">取消</button><button class="btn btn-primary" type="button" id="confirmStartBtn" disabled>確認並開始</button></div>
+  </section>
+</div>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const els = {
+    pill:$('statusPill'),phase:$('phaseTitle'),hint:$('phaseHint'),timer:$('timer'),timerLabel:$('timerLabel'),
+    m1l:$('metric1Label'),m1:$('metric1Value'),m2l:$('metric2Label'),m2:$('metric2Value'),m3:$('metric3Value'),
+    ring:$('ringProgress'),fill:$('progressFill'),percent:$('progressNumber'),progressText:$('progressText'),
+    start:$('startBtn'),pause:$('pauseBtn'),next:$('nextBtn'),more:$('continueBtn'),stop:$('stopBtn'),reset:$('resetBtn'),
+    modeGroup:$('modeGroup'),cycleFields:$('cycleFields'),restFields:$('restFields'),readyFields:$('readyFields'),quickReady:$('quickReady'),quickRest:$('quickRest'),sessionRemaining:$('sessionRemaining'),workTip:$('workTip'),pageSubtitle:$('pageSubtitle'),
+    breaths:$('breathsSelect'),rounds:$('roundsSelect'),inhale:$('inhaleSelect'),exhale:$('exhaleSelect'),rest:$('restSelect'),ready:$('readySelect'),
+    voice:$('voiceCheck'),sound:$('soundCheck'),modal:$('safetyModal'),consent:$('safetyConsent'),confirm:$('confirmStartBtn'),cancel:$('cancelStartBtn'),
+    desc:$('modalDescription'),modalList:$('modalList'),toast:$('toast'),
+    settings:$('settingsCard'),settingsTrigger:$('settingsTrigger'),settingsClose:$('settingsClose'),settingsScrim:$('settingsScrim')
+  };
+  const modeRadios = Array.from(document.querySelectorAll('input[name="mode"]'));
+  const configControls = [...modeRadios,els.breaths,els.rounds,els.inhale,els.exhale,els.rest,els.ready,els.quickReady,els.quickRest];
+  const stepElements = {inhale:$('stepInhale'),exhale:$('stepExhale'),hold:$('stepHold'),recovery:$('stepRecovery')};
+  const labels = {idle:'待機中',prep:'準備',inhale:'吸氣',exhale:'吐氣',hold:'自主閉氣',recovery:'恢復吸氣',rest:'輪次休息',done:'完成'};
+  let cfg = {mode:'rest',breaths:30,rounds:3,inhale:3,exhale:3,rest:3,ready:1,voice:true,sound:true};
+  let state = {status:'idle',stage:'idle',round:1,breath:1,stageStart:0,heldMs:0,durationMs:0,cycleGoal:0,finishedBreaths:0};
+  let audioContext = null,toastTimeout=null,lastRender=0;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const compactScreen = matchMedia('(max-width:700px) and (orientation:portrait)');
+  function toggleSettings(open){
+    const mobile=compactScreen.matches;
+    const show=mobile&&open;
+    document.body.classList.toggle('settings-open',show);
+    els.settingsTrigger.setAttribute('aria-expanded',String(show));
+    els.settings.inert=mobile&&!show;
+    if(show)els.settingsClose.focus();
+    else if(mobile&&document.activeElement===els.settingsClose)els.settingsTrigger.focus();
+  }
+  els.settingsTrigger.addEventListener('click',()=>toggleSettings(true));
+  els.settingsClose.addEventListener('click',()=>toggleSettings(false));
+  els.settingsScrim.addEventListener('click',()=>toggleSettings(false));
+  compactScreen.addEventListener('change',()=>toggleSettings(false));
+  function safeStore(){try{localStorage.setItem('breathflow-v2',JSON.stringify(cfg));}catch(e){}}
+  function restore(){
+    try{
+      const old=JSON.parse(localStorage.getItem('breathflow-v2')||localStorage.getItem('breathflow-v1')||'{}');
+      // Migrating v1: preserve settings, but never default to high-ventilation mode for work.
+      const savedV2=!!localStorage.getItem('breathflow-v2');
+      if(savedV2&&['cycle','rest','ready'].includes(old.mode))cfg.mode=old.mode;
+      for(const [key,options] of Object.entries({breaths:[30,35,40],rounds:[1,2,3,4],inhale:[2,3,4,5],exhale:[2,3,4,5],rest:[2,3,5],ready:[1,2,3]})) if(options.includes(old[key])) cfg[key]=old[key];
+      if(typeof old.voice==='boolean') cfg.voice=old.voice;
+      if(typeof old.sound==='boolean') cfg.sound=old.sound;
+    }catch(e){}
+    modeRadios.forEach(input=>input.checked=input.value===cfg.mode);
+    for(const key of ['breaths','rounds','inhale','exhale','rest','ready'])els[key].value=String(cfg[key]);
+    els.voice.checked=cfg.voice;els.sound.checked=cfg.sound;
+    if(cfg.mode==='cycle')document.querySelector('.advanced-mode').open=true;
+  }
+  function readConfig(){
+    cfg.mode=modeRadios.find(x=>x.checked)?.value||'cycle';
+    for(const key of ['breaths','rounds','inhale','exhale','rest','ready'])cfg[key]=Number(els[key].value);
+    cfg.voice=els.voice.checked;cfg.sound=els.sound.checked;
+    safeStore();
+  }
+  function syncSettings(){
+    const work=cfg.mode!=='cycle';
+    els.cycleFields.hidden=work;
+    els.restFields.hidden=cfg.mode!=='rest';
+    els.readyFields.hidden=cfg.mode!=='ready';
+    stepElements.hold.style.display=work?'none':'';
+    stepElements.recovery.style.display=work?'none':'';
+    for(const line of document.querySelectorAll('.step-line')) line.style.display=work?'none':'';
+    els.quickReady.classList.toggle('active',cfg.mode==='ready');
+    els.quickRest.classList.toggle('active',cfg.mode==='rest');
+    els.quickReady.setAttribute('aria-pressed',String(cfg.mode==='ready'));
+    els.quickRest.setAttribute('aria-pressed',String(cfg.mode==='rest'));
+    els.workTip.textContent=cfg.mode==='rest'?'先坐下，讓喘息平穩再開始；做完後把剩餘時間留給真正的休息。':cfg.mode==='ready'?'開工前放鬆肩頸，輕柔自然地吸吐；不刻意深吸、不閉氣。':'原版只限非工作時間；連續深呼吸和閉氣可能使人昏厥，絕不在工作前或間隙使用。';
+    els.pageSubtitle.textContent=cfg.mode==='rest'?'進休息室後先喘勻，再開始短時間的恢復練習。':cfg.mode==='ready'?'開工前短暫整理呼吸與注意力；不要追求亢奮。':'原版深呼吸循環，僅適合遠離工作時段的安全環境。';
+    els.start.textContent=cfg.mode==='rest'?'開始休息室呼吸':cfg.mode==='ready'?'開始開工前呼吸':'開始原版循環';
+    render(performance.now());
+  }
+  function lockSettings(locked){configControls.forEach(x=>x.disabled=locked)}
+  function toast(message){
+    els.toast.textContent=message;els.toast.classList.add('show');
+    if(toastTimeout)clearTimeout(toastTimeout);
+    toastTimeout=setTimeout(()=>els.toast.classList.remove('show'),3400);
+  }
+  function getElapsed(now=performance.now()){
+    return Math.max(0,state.heldMs+(state.status==='running'?now-state.stageStart:0));
+  }
+  function enableAudio(){
+    if(!cfg.sound)return;
+    try {const AudioCtx=window.AudioContext||window.webkitAudioContext;if(AudioCtx){audioContext=audioContext||new AudioCtx();if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});}}catch(e){}
+  }
+  function chime(){
+    if(!cfg.sound||!audioContext)return;
+    try{
+      const osc=audioContext.createOscillator(),gain=audioContext.createGain(),t=audioContext.currentTime;
+      osc.type='sine';osc.frequency.setValueAtTime(510,t);osc.frequency.exponentialRampToValueAtTime(665,t+.16);
+      gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.065,t+.035);gain.gain.exponentialRampToValueAtTime(.0001,t+.33);
+      osc.connect(gain).connect(audioContext.destination);osc.start(t);osc.stop(t+.35);
+    }catch(e){}
+  }
+  function speak(message){
+    if(!('speechSynthesis' in window))return;
+    try{
+      window.speechSynthesis.cancel();
+      if(!cfg.voice||!message)return;
+      const utter=new SpeechSynthesisUtterance(message);utter.lang='zh-TW';utter.rate=1.07;utter.pitch=1.02;utter.volume=.9;
+      window.speechSynthesis.speak(utter);
+    }catch(e){}
+  }
+  function announce(stage){
+    const voice={prep:'準備開始',inhale:'輕輕吸氣',exhale:'慢慢吐氣',hold:'吐氣後自然閉氣。想吸氣時按下按鈕',recovery:'深吸一口氣，保持十五秒',rest:'這一輪完成。恢復自然呼吸',done:'練習完成。恢復自然呼吸'};
+    if(cfg.mode==='cycle'&&stage==='inhale'&&state.breath%5===0)speak(`第${state.breath}次，吸氣`);
+    else if(cfg.mode==='cycle')speak(({...voice,inhale:'吸氣',exhale:'自然吐氣'})[stage]);
+    else speak(voice[stage]);
+    if(!['prep','rest','done'].includes(stage))chime();
+  }
+  function phaseDuration(stage){
+    if(stage==='prep')return 3000;
+    if(stage==='inhale')return (cfg.mode==='rest'?4:cfg.mode==='ready'?3:cfg.inhale)*1000;
+    if(stage==='exhale')return (cfg.mode==='rest'?6:cfg.mode==='ready'?3:cfg.exhale)*1000;
+    if(stage==='recovery')return 15000;
+    return 0;
+  }
+  function enter(stage,carry=0){
+    state.stage=stage;state.durationMs=phaseDuration(stage);state.heldMs=carry;state.stageStart=performance.now();
+    document.body.dataset.phase=stage;
+    announce(stage);
+    render(performance.now(),true);
+  }
+  function advance(carry=0){
+    if(state.stage==='prep'){enter('inhale',carry);return;}
+    if(state.stage==='inhale'){enter('exhale',carry);return;}
+    if(state.stage==='exhale'){
+      state.finishedBreaths++;
+      if(cfg.mode!=='cycle'){
+        if(state.breath>=state.cycleGoal){complete();return;}
+        state.breath++;enter('inhale',carry);return;
+      }
+      if(state.breath>=cfg.breaths){enter('hold');return;}
+      state.breath++;enter('inhale',carry);return;
+    }
+    if(state.stage==='recovery'){
+      if(state.round>=cfg.rounds){complete();return;}
+      enter('rest');return;
+    }
+  }
+  function complete(){
+    state.status='done';state.stage='done';state.durationMs=0;state.heldMs=0;
+    document.body.dataset.phase='done';announce('done');lockSettings(false);render(performance.now());
+  }
+  function begin(){
+    enableAudio();readConfig();
+    state={status:'running',stage:'prep',round:1,breath:1,stageStart:performance.now(),heldMs:0,durationMs:3000,cycleGoal:cfg.mode==='rest'?cfg.rest*6:cfg.mode==='ready'?cfg.ready*10:0,finishedBreaths:0};
+    lockSettings(true);els.modal.hidden=true;document.body.dataset.phase='prep';enter('prep');
+  }
+  function pause(){
+    if(state.status!=='running')return;
+    state.heldMs=getElapsed();state.status='paused';speak('');render(performance.now());
+  }
+  function resume(){
+    if(state.status!=='paused')return;
+    enableAudio();state.stageStart=performance.now();state.status='running';render(performance.now());
+  }
+  function reset(){
+    if('speechSynthesis' in window)try{speechSynthesis.cancel()}catch(e){}
+    state={status:'idle',stage:'idle',round:1,breath:1,stageStart:0,heldMs:0,durationMs:0,cycleGoal:0,finishedBreaths:0};
+    document.body.dataset.phase='idle';lockSettings(false);render(performance.now());
+  }
+  function finishHold(){
+    if(state.status!=='running'||state.stage!=='hold')return;
+    enter('recovery');
+  }
+  function nextRound(){
+    if(state.status!=='running'||state.stage!=='rest')return;
+    state.round++;state.breath=1;enter('prep');
+  }
+  function formatClock(ms){
+    const sec=Math.floor(Math.max(0,ms)/1000);
+    return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+  }
+  function countDown(ms){return (Math.max(0,ms)/1000).toFixed(1)}
+  function controlButtons(){
+    const idle=state.status==='idle',done=state.status==='done',paused=state.status==='paused';
+    const manual=state.stage==='hold'||state.stage==='rest';
+    els.start.hidden=!idle;els.pause.hidden=idle||done||(manual&&!paused);els.pause.textContent=paused?'繼續':'暫停';
+    els.next.hidden=state.stage!=='hold'||state.status!=='running';
+    els.more.hidden=state.stage!=='rest'||state.status!=='running';
+    els.stop.hidden=idle||done;els.reset.hidden=!done;
+  }
+  function render(now,force=false){
+    if(!force&&now-lastRender<30&&state.status==='running'&&state.stage!=='hold')return;
+    lastRender=now;
+    const idle=state.status==='idle',done=state.status==='done',paused=state.status==='paused',gentle=cfg.mode!=='cycle',stage=state.stage;
+    const elapsed=getElapsed(now),duration=state.durationMs,left=Math.max(0,duration-elapsed);
+    const fraction=duration?Math.max(0,Math.min(1,elapsed/duration)):0;
+    let title='準備開始',hint='設定你的節奏，再按下開始',clock='—',clockLabel='呼吸引導';
+    if(stage==='prep'){title='預備呼吸';hint=cfg.mode==='ready'?'整理專注，保持自然呼吸':'坐穩、放鬆肩膀';clock=countDown(left);clockLabel='秒後開始';}
+    if(stage==='inhale'){title='吸氣';hint=gentle?'輕輕吸入，不要刻意吸到飽':'深吸氣，保持舒適';clock=countDown(left);clockLabel='吸氣倒數 · 秒';}
+    if(stage==='exhale'){title='自然吐氣';hint=gentle?'輕緩吐出，不要強迫自己跟拍':'自然放鬆吐出，不必吐盡';clock=countDown(left);clockLabel='吐氣倒數 · 秒';}
+    if(stage==='hold'){title='自主閉氣';hint='一有吸氣需求就按下按鈕，不必忍耐';clock=formatClock(elapsed);clockLabel='已經過時間 · 非目標';}
+    if(stage==='recovery'){title='深吸後保持';hint='吸一口氣並輕柔保持；不適可立即結束';clock=countDown(left);clockLabel='恢復呼吸倒數 · 秒';}
+    if(stage==='rest'){title='自然呼吸';hint='上一輪完成，準備好再開始下一輪';clock='✓';clockLabel='輪次休息';}
+    if(done){title='練習完成';hint=cfg.mode==='rest'?'恢復自然呼吸，把剩餘時間留給休息':cfg.mode==='ready'?'保持自然呼吸，接著正常準備開工':'做得剛好就好，現在恢復自然呼吸';clock='✓';clockLabel='已完成';}
+    els.phase.textContent=title;els.hint.textContent=hint;els.timer.textContent=clock;els.timerLabel.textContent=clockLabel;
+    els.pill.textContent=idle?'尚未開始':done?'已完成':paused?'已暫停':stage==='hold'?'自主決定閉氣結束':stage==='rest'?'等待下一輪':`進行中 · ${labels[stage]}`;
+    if(gentle){
+      const totalMinutes=cfg.mode==='rest'?cfg.rest:cfg.ready;
+      els.m1l.textContent='本次時間';els.m1.textContent=`${totalMinutes} 分鐘`;
+      els.m2l.textContent='完成循環';els.m2.textContent=`${state.finishedBreaths} / ${state.cycleGoal||((cfg.mode==='rest'?6:10)*totalMinutes)} 次`;
+      const secondsPerCycle=cfg.mode==='rest'?10:6;
+      const elapsedCycle=stage==='inhale'?elapsed:stage==='exhale'?secondsPerCycle*1000-(duration-elapsed):0;
+      const completedTime=state.finishedBreaths*secondsPerCycle*1000+elapsedCycle;
+      const totalTime=totalMinutes*60000;
+      els.sessionRemaining.textContent=done?'本次練習結束':`整段剩餘 ${formatClock(Math.max(0,totalTime-completedTime))}`;
+      els.sessionRemaining.hidden=false;
+    }else{
+      els.sessionRemaining.hidden=true;
+      els.m1l.textContent='目前輪次';els.m1.textContent=`${state.round} / ${cfg.rounds}`;
+      els.m2l.textContent='本輪呼吸';els.m2.textContent=`${idle?0:state.finishedBreaths-(state.round-1)*cfg.breaths} / ${cfg.breaths}`;
+    }
+    els.m3.textContent=paused?`${labels[stage]}（暫停）`:labels[stage];
+    let progress=gentle?(state.finishedBreaths/(state.cycleGoal||((cfg.mode==='rest'?6:10)*(cfg.mode==='rest'?cfg.rest:cfg.ready)))):(state.finishedBreaths/(cfg.breaths*cfg.rounds));
+    progress=done?1:Math.max(0,Math.min(1,progress));
+    els.fill.style.width=(progress*100).toFixed(1)+'%';els.percent.textContent=Math.round(progress*100)+'%';
+    els.progressText.textContent=gentle?'本次練習進度':'原版呼吸次數進度';
+    const ringPercent=stage==='hold'?1:stage==='rest'||done?0:fraction;
+    els.ring.style.strokeDashoffset=String(100-ringPercent*100);
+    let scale=.82;
+    if(stage==='inhale')scale=.78+.31*fraction;
+    else if(stage==='exhale')scale=1.09-.31*fraction;
+    else if(stage==='recovery')scale=1.07;
+    else if(stage==='hold')scale=.84;
+    else if(stage==='rest'||done)scale=.9;
+    if(reducedMotion.matches)scale=.91;
+    document.documentElement.style.setProperty('--orbScale',scale.toFixed(4));
+    Object.entries(stepElements).forEach(([name,el])=>el.classList.toggle('active',stage===name));
+    controlButtons();
+  }
+  function loop(now){
+    if(state.status==='running'&&state.durationMs>0){
+      let n=0;
+      while(state.status==='running'&&state.durationMs>0&&getElapsed(now)>=state.durationMs&&n++<200){
+        const extra=getElapsed(now)-state.durationMs;
+        advance(extra);
+      }
+    }
+    render(now);requestAnimationFrame(loop);
+  }
+  function openModal(){
+    if(state.status!=='idle')return;
+    readConfig();
+    const gentle=cfg.mode!=='cycle';
+    els.desc.textContent=gentle?'溫和呼吸不包含閉氣，但仍請保持自然舒適，避免用力過度。':'此模式含連續深呼吸與閉氣，可能導致頭暈、手腳刺麻或短暫昏厥。閉氣時間不以秒數作為目標。';
+    els.modalList.innerHTML=gentle?'<li>請坐在安全位置，緩慢自然呼吸。</li><li>若出現頭暈、胸痛、呼吸困難或任何不適，立即停止，必要時就醫。</li>':'<li>請坐在安全的位置或躺下，不要站立。</li><li>不要在泳池、浴缸、淋浴間、開車或機具旁使用。</li><li>如有心肺疾病、癲癇、懷孕或其他相關健康疑慮，先諮詢醫療專業人員。</li><li>若出現快昏倒、胸痛、心悸或其他不適，立即停止並恢復自然呼吸，必要時就醫。</li>';
+    els.consent.checked=false;els.confirm.disabled=true;els.modal.hidden=false;els.consent.focus();
+  }
+  for(const el of [...modeRadios,els.breaths,els.rounds,els.inhale,els.exhale,els.rest,els.ready,els.voice,els.sound])el.addEventListener('change',()=>{if(state.status==='done')reset();readConfig();syncSettings();});
+  function quickSetMode(mode){
+    if(state.status==='running'||state.status==='paused')return;
+    if(state.status==='done')reset();
+    const radio=modeRadios.find(x=>x.value===mode);
+    if(!radio)return;
+    radio.checked=true;readConfig();syncSettings();
+  }
+  els.quickRest.addEventListener('click',()=>quickSetMode('rest'));
+  els.quickReady.addEventListener('click',()=>quickSetMode('ready'));
+  els.start.addEventListener('click',()=>{
+    readConfig();
+    if(cfg.mode==='cycle')openModal();
+    else begin();
+  });
+  els.cancel.addEventListener('click',()=>{els.modal.hidden=true;els.start.focus()});
+  els.consent.addEventListener('change',()=>els.confirm.disabled=!els.consent.checked);
+  els.confirm.addEventListener('click',()=>{if(els.consent.checked)begin()});
+  els.pause.addEventListener('click',()=>state.status==='paused'?resume():pause());
+  els.next.addEventListener('click',finishHold);
+  els.more.addEventListener('click',nextRound);
+  els.stop.addEventListener('click',()=>{reset();toast('已結束。請恢復自然呼吸。')});
+  els.reset.addEventListener('click',reset);
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&!els.modal.hidden){els.modal.hidden=true;els.start.focus();return;}
+    if(event.key==='Escape'&&document.body.classList.contains('settings-open')){toggleSettings(false);els.settingsTrigger.focus();return;}
+    if(event.code!=='Space'||!els.modal.hidden||['INPUT','SELECT','BUTTON','TEXTAREA'].includes(document.activeElement.tagName))return;
+    if(state.status==='running'&&state.stage!=='hold'&&state.stage!=='rest'){event.preventDefault();pause();}
+    else if(state.status==='paused'){event.preventDefault();resume();}
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden&&state.status==='running'){
+      pause();toast('切換視窗已自動暫停，返回後請手動繼續。');
+    }
+  });
+  restore();syncSettings();toggleSettings(false);render(performance.now());requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
